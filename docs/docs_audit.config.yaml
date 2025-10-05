@@ -1,0 +1,20 @@
+review_intervals:
+  governance: 90
+  ai: 90
+  fea: 180
+  modules: 180
+  libraries: 180
+  default: 180
+paths:
+  governance:
+  - docs/framework/1-governance/**
+  - docs/framework/change-management-policy.md
+  ai:
+  - docs/framework/ai/**
+  - docs/framework/ai-response-protocol.md
+  fea:
+  - docs/framework/6-fea/**
+  modules:
+  - docs/framework/5-modules/**
+  libraries:
+  - docs/framework/3-libraries/**
