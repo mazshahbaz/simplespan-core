@@ -1,0 +1,86 @@
+version: 1
+
+meta:
+  name: SimpleSpan Router Map
+  last_updated: 2025-10-05
+  notes: >
+    Declarative routes for AI tasks. Paths are repo-relative (POSIX style).
+    Tokens like "@common" expand to defaults.acceptance_common.
+
+defaults:
+  acceptance_common:
+    - "SI units; CHBDC/CSA inline where applicable"
+    - "Front-matter present; ai_generated: true (if AI-created)"
+    - "Validation artifacts (tests or JSON cases) included"
+    - "Cross-links to ADRs/framework docs"
+    - "Append AI-log entry and update CHANGELOG.md"
+
+routes:
+  plan:
+    module:
+      prompt: docs/framework/4-execution/prompt-library/plan_module.prompt.md
+      context:
+        - docs/framework/5-modules/module-planning-playbook.md
+        - docs/framework/5-modules/module-scaffolding-handoff-sop.md
+        - docs/framework/1-governance/coding-implementation-standards.md
+        - docs/framework/ai-response-protocol.md
+        - docs/framework/decisions/ADR-001-SI-units-and-metric.md
+        - docs/framework/decisions/ADR-004-domain-granularity.md
+      acceptance:
+        - "@common"
+        - "Interfaces documented with typed signatures"
+        - "Validation plan includes tolerances and sources"
+
+    feature:
+      prompt: docs/framework/4-execution/prompt-library/plan_feature.prompt.md
+      context:
+        - docs/framework/ai-response-protocol.md
+        - docs/framework/1-governance/coding-implementation-standards.md
+        - docs/framework/decisions/ADR-001-SI-units-and-metric.md
+        - docs/framework/decisions/ADR-004-domain-granularity.md
+        # For FEA features, optionally include:
+        # - docs/framework/6-fea/fea-architecture-and-design.md
+        # - docs/framework/6-fea/results-and-postprocessing-spec.md
+      acceptance:
+        - "@common"
+        - "Feature constraints documented; scope and assumptions explicit"
+
+  module:
+    _default:
+      prompt: docs/framework/4-execution/prompt-library/module_scaffold.prompt.md
+      context:
+        - docs/framework/5-modules/module-planning-playbook.md
+        - docs/framework/5-modules/module-scaffolding-handoff-sop.md
+      acceptance:
+        - "Docstrings include SI units & CHBDC/CSA references"
+        - "Unit tests + ≥1 validation JSON case"
+        - "No upward imports; CI green"
+        - "AI log entry created"
+
+  fea:
+    _default:
+      prompt: docs/framework/4-execution/prompt-library/fea_module_scaffold.prompt.md
+      context:
+        - docs/framework/6-fea/fea-architecture-and-design.md
+        - docs/framework/6-fea/element-library-spec.md
+        - docs/framework/6-fea/loads-and-moving-loads-spec.md
+        - docs/framework/6-fea/solver-and-assembly-spec.md
+        - docs/framework/6-fea/results-and-postprocessing-spec.md
+      acceptance:
+        - "API signatures present"
+        - "Envelopes spec followed"
+        - "Station queries independent of mesh"
+        - "AI log entry created"
+
+  docs:
+    _default:
+      prompt: docs/framework/4-execution/prompt-library/docs_update.prompt.md
+      context:
+        - docs/framework/documentation-governance.md
+        - docs/framework/change-management-policy.md
+        - docs/framework/contributor-playbook.md
+      acceptance:
+        - "Front-matter present & valid"
+        - "Links and spellcheck pass"
+        - "CHANGELOG updated if behavior/version changed"
+        - "AI log entry created"
