@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "simplespan-core"
+version = "0.1.0"
+description = "Python structural engineering framework (SI, CHBDC/CSA), optimized for AI coding agents."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{name="SimpleSpan Software"}]
+license = {text = "SEE LICENSE FILE"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "ruff", "mypy", "types-setuptools"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+simplespan_core = ["py.typed"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I"]

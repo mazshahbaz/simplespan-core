@@ -1,0 +1,8 @@
+session_id: AIC-YYYY-MM-DD-XXX
+timestamp: 2025-10-05T00:00:00Z
+actor: GPT-5
+role: aic
+phase: 1
+plan_file: docs/framework/ai/aic-subproject/roadmap.md
+action_summary: "placeholder valid session"
+status: accepted

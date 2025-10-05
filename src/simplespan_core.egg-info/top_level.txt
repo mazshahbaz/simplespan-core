@@ -1,0 +1,6 @@
+application
+core
+domain
+infrastructure
+presentation
+simplespan_core

@@ -1,0 +1,28 @@
+name: Docs & Logs Schema Check
+
+on:
+  push:
+    paths:
+      - 'docs/**'
+      - 'examples/**'
+      - 'reports/**'
+      - 'tools/**'
+      - '.github/workflows/docs-and-logs-check.yml'
+  pull_request:
+
+jobs:
+  check-schemas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate presence of key docs
+        run: |
+          test -f docs/framework/ai/plan-schema.md
+          test -f docs/framework/ai/logging-schema.md
+          test -f reports/progress.md
+      - name: Basic YAML sanity (examples logs)
+        run: |
+          python -c "import sys, yaml; yaml.safe_load(open('examples/logs/valid-session.yaml'))" || exit 1
+        shell: bash
+        env:
+          PYTHONPATH: .

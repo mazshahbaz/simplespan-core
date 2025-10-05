@@ -1,0 +1,16 @@
+default_plan: docs/framework/1-governance/simple-span-framework-refinement-plan-v4.0.md
+default_progress: reports/progress.md
+
+allowlist:
+  - docs/**
+  - tools/**
+  - src/simplespan_*/**
+  - tests/**
+  - .github/**
+  - .ai/**
+  - reports/**
+  - validation/**
+
+caps:
+  files: 12
+  lines: 600

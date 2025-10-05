@@ -1,0 +1,37 @@
+name: Router Map Lint
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  router-map-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml jsonschema
+
+      - name: Validate Router Map (schema + existence)
+        run: |
+          python tools/ai/scripts/validate_router_map.py             --schema tools/ai/router-map.schema.json             --map tools/ai/router-map.yaml             --report router-map-report.json
+
+      - name: Router Dry-Run Check
+        run: |
+          python tools/ai/route_task.py --check || exit 1
+
+      - name: Upload lint report
+        uses: actions/upload-artifact@v4
+        with:
+          name: router-map-report
+          path: router-map-report.json
