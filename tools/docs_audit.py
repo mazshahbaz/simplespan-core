@@ -9,13 +9,88 @@ OPTIONAL_KEYS = ["ai_generated", "ai_context"]
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 FRONT_MATTER_PATTERN = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 
+def _parse_scalar(value: str):
+    val = value.strip()
+    if not val:
+        return ""
+    low = val.lower()
+    if low == "true":
+        return True
+    if low == "false":
+        return False
+    if low in {"null", "none"}:
+        return None
+    try:
+        if val.isdigit():
+            return int(val)
+        if re.match(r"^-?\d+\.\d+$", val):
+            return float(val)
+    except Exception:
+        pass
+    if (val.startswith("[") and val.endswith("]")) or (val.startswith("{") and val.endswith("}")):
+        try:
+            return json.loads(val)
+        except Exception:
+            pass
+    if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+        return val[1:-1]
+    return val
+
+def _parse_block(lines, start, indent):
+    items = []
+    mapping = {}
+    mode = None  # None -> unknown, "list" or "dict"
+    i = start
+    while i < len(lines):
+        raw = lines[i]
+        if not raw.strip():
+            i += 1
+            continue
+        current_indent = len(raw) - len(raw.lstrip(" "))
+        if current_indent < indent:
+            break
+        stripped = raw.strip()
+        if stripped.startswith("- "):
+            if mode == "dict":
+                break
+            mode = "list"
+            value_part = stripped[2:].strip()
+            if value_part:
+                items.append(_parse_scalar(value_part))
+                i += 1
+            else:
+                sub_value, new_i = _parse_block(lines, i + 1, current_indent + 2)
+                items.append(sub_value)
+                i = new_i
+        else:
+            if mode == "list":
+                break
+            mode = "dict"
+            if ":" not in stripped:
+                i += 1
+                continue
+            key, value_part = stripped.split(":", 1)
+            key = key.strip()
+            value_part = value_part.strip()
+            if value_part:
+                mapping[key] = _parse_scalar(value_part)
+                i += 1
+            else:
+                sub_value, new_i = _parse_block(lines, i + 1, current_indent + 2)
+                mapping[key] = sub_value
+                i = new_i
+    if mode == "list":
+        return items, i
+    return mapping, i
+
 def load_yaml(text):
     try:
-        import yaml
-    except Exception:
-        print("PyYAML is required. Install with: pip install pyyaml", file=sys.stderr)
-        sys.exit(2)
-    return yaml.safe_load(text)
+        import yaml  # type: ignore
+        return yaml.safe_load(text)
+    except ModuleNotFoundError:
+        lines = [ln.rstrip("\n") for ln in text.splitlines()]
+        parsed, _ = _parse_block(lines, 0, 0)
+        return parsed
 
 def parse_markdown(path: Path):
     text = path.read_text(encoding="utf-8", errors="ignore")
@@ -145,7 +220,7 @@ def main():
 
     errors, warnings, stale = [], [], []
     contexts = []  # for context_index.json
-    logs = load_ai_logs(ai_log_dir) if args.check_ai-logs else []
+    logs = load_ai_logs(ai_log_dir) if args.check_ai_logs else []
 
     files_scanned = 0
 

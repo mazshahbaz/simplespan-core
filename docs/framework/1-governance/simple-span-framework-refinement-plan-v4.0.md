@@ -1,4 +1,3 @@
-
 ---
 title: SimpleSpan Framework Refinement Plan — v4.0 (Implementation Grade)
 version: 4.0
@@ -6,7 +5,10 @@ context: governance/refinement
 schema_version: 1
 last_reviewed: 2025-10-05
 ai_context: true
+status: archived
 ---
+
+> **Archived Plan:** This document is preserved for historical reference. Active governance and status tracking moved to `docs/framework/1-governance/simple-span-framework-refinement-plan-v5.0.md` under CCP `vCORE-5.0-ccp-baseline`.
 
 ## 🧭 YAML Resume Context
 
@@ -28,7 +30,7 @@ resume_context:
 
 ---
 
-# 📊 Project Progress Tracker
+# 📊 Project Progress Tracker *(Historical Snapshot)*
 
 | Phase | Description | % Done | Status | CCP Tag | Notes |
 |--------|--------------|--------|---------|----------|-------|

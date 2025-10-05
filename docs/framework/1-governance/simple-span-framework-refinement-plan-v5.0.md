@@ -104,10 +104,10 @@ Transition from v4.0 to AI-native governance. Establish continuity checkpoints a
 None (initial baseline).
 
 ### ✅ Checklist
-- [ ] Freeze v4.0 roadmap and record CCP tag (`vCORE-4.0-ccp-final`).
-- [ ] Add supersedes notice in v5.0 front-matter.
+- [x] Freeze v4.0 roadmap and record CCP tag (`vCORE-4.0-ccp-final`).
+- [x] Add supersedes notice in v5.0 front-matter.
 - [ ] Activate AIC orchestrator configuration (`tools/aic_orchestrator.config.yaml`).
-- [ ] Initialize `reports/progress.md` and `reports/ai/sessions/`.
+- [ ] Initialize `reports/progress.md` and `reports/ai/sessions/` (progress log active; sessions/ pending).
 - [ ] Log a baseline AIC session using `tools/ai/aic_logger.py`.
 
 ### 📄 Deliverables

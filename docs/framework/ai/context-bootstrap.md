@@ -13,8 +13,8 @@ ai_context: true
 This document establishes the **official procedure** for rehydrating AI operational context within the SimpleSpan Framework.  
 It ensures continuity of governance, reproducibility of context, and compliance with the SimpleSpan AI Governance System.
 
-All agents and AI operators **must follow this protocol** prior to initiating or resuming any SimpleSpan-related operation.  
-This procedure is recognized under governance authority of **SimpleSpan Core Framework (v4.0)** and its **AIC Enablement & Automation Sub-Project**.
+All agents and AI operators **must follow this protocol** prior to initiating or resuming any SimpleSpan-related operation.
+This procedure is recognized under governance authority of **SimpleSpan Core Framework (v5.0)** and its **AIC Enablement & Automation Sub-Project**.
 
 ---
 
@@ -32,9 +32,9 @@ This protocol applies to all AI entities (AIC, Planner, Implementer, Reviewer, A
 ### Step 1 — Declare Context
 Begin every session by declaring:
 
-> "Load context from the SimpleSpan repository.  
-> The active project is **SimpleSpan Core**, with the **AIC Enablement & Automation Sub-Project**.  
-> Resume from Phase 1 — Governance & Policy Integration."
+> "Load context from the SimpleSpan repository.
+> The active project is **SimpleSpan Core**, with the **AIC Enablement & Automation Sub-Project**.
+> Resume from Phase 0 — Continuity & Genesis."
 
 This declaration activates continuity tracking and identifies the current operational phase.
 
@@ -43,8 +43,8 @@ This declaration activates continuity tracking and identifies the current operat
 ### Step 2 — Reference Core Governance Documents
 Load the following documents (in order) to establish base state:
 
-1. **Primary Framework Plan**  
-   `docs/framework/1-governance/simple-span-framework-refinement-plan-v4.0.md`
+1. **Primary Framework Plan**
+   `docs/framework/1-governance/simple-span-framework-refinement-plan-v5.0.md`
 
 2. **AIC Sub-Project Roadmap**  
    `docs/framework/ai/aic-subproject/roadmap.md`
@@ -123,9 +123,9 @@ All AI and human operators must adhere to these policies:
 ## 6. Appendix — Example Initialization Prompts
 
 ### (a) AIC Initialization Prompt
-> "Initialize AIC operations using the SimpleSpan Context Bootstrap Protocol.  
-> Load active governance and orchestration context.  
-> Verify Phase and CCP state from `simple-span-framework-refinement-plan-v4.0.md`.  
+> "Initialize AIC operations using the SimpleSpan Context Bootstrap Protocol.
+> Load active governance and orchestration context.
+> Verify Phase and CCP state from `simple-span-framework-refinement-plan-v5.0.md`.
 > Propose the next 1–3 actionable items under current phase checklist."
 
 ### (b) Planner Agent Prompt

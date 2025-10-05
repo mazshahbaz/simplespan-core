@@ -3,7 +3,7 @@
 """
 AIC Orchestrator (read-only v1)
 --------------------------------
-Reads the v4.0 plan and progress log, loads YAML resume_context, identifies the
+Reads the v5.0 plan and progress log, loads YAML resume_context, identifies the
 current phase, and prints the next 1–3 unchecked checklist items with helpful
 hints. Uses only the Python stdlib.
 
@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Tuple, Dict
 
-DEFAULT_PLAN = "docs/framework/1-governance/simple-span-framework-refinement-plan-v4.0.md"
+DEFAULT_PLAN = "docs/framework/1-governance/simple-span-framework-refinement-plan-v5.0.md"
 DEFAULT_PROGRESS = "reports/progress.md"
 
 ALLOWLIST_PATHS = [
@@ -31,18 +31,14 @@ ALLOWLIST_PATHS = [
 DIFF_CAPS = {"files": 12, "lines": 600}
 
 PHASE_TITLES = {
-    0: "Repository Synchronization & Baseline",
-    1: "Governance Review & Consolidation",
-    2: "Schema & Goal Tag Implementation",
-    3: "Governance Audit & Cross-Reference",
-    4: "Automation Track 1",
-    5: "Agent Pipeline",
-    6: "FEA Domain Initialization",
-    7: "Governance Scanner & Auto-Tasks",
-    8: "Autonomous Validation & Release",
-    9: "Continuous Learning Factory",
-    10: "Multi-Domain Expansion",
-    11: "Continuity & Context Preservation",
+    0: "Continuity & Genesis",
+    1: "AI Governance Integration",
+    2: "Validation & Logging Automation",
+    3: "Modular Intelligence Integration",
+    4: "Human-AI Collaboration Protocols",
+    5: "Telemetry & Reporting Framework",
+    6: "Expansion & Domain Scaling",
+    7: "CCP Audit & Lifecycle Mgmt",
 }
 
 @dataclass
