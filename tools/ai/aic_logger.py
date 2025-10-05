@@ -4,10 +4,11 @@ SimpleSpan AIC Logger (stub)
 Appends a session log YAML file under reports/ai/sessions/ using the agreed schema.
 No external dependencies required.
 """
-import argparse, os, sys
+import argparse
+import sys
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-import uuid
 
 ALLOWED_ROLES = {"aic","planner","implementer","reviewer","auditor","human"}
 ALLOWED_STATUS = {"draft","pending","accepted","rejected"}
@@ -29,9 +30,17 @@ def main():
     role = args.role.strip().lower()
     status = args.status.strip().lower()
     if role not in ALLOWED_ROLES:
-        print(f"Invalid role: {role}. Allowed: {sorted(ALLOWED_ROLES)}", file=sys.stderr); sys.exit(2)
+        print(
+            f"Invalid role: {role}. Allowed: {sorted(ALLOWED_ROLES)}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
     if status not in ALLOWED_STATUS:
-        print(f"Invalid status: {status}. Allowed: {sorted(ALLOWED_STATUS)}", file=sys.stderr); sys.exit(2)
+        print(
+            f"Invalid status: {status}. Allowed: {sorted(ALLOWED_STATUS)}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
 
     # Prepare paths
     out_dir = Path("reports/ai/sessions")

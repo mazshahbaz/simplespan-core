@@ -20,7 +20,7 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple, Dict
+from typing import Dict, List, Optional
 
 DEFAULT_PLAN = "docs/framework/1-governance/simple-span-framework-refinement-plan-v4.0.md"
 DEFAULT_PROGRESS = "reports/progress.md"
@@ -74,7 +74,6 @@ def parse_resume_context(plan_text: str) -> Dict[str, str]:
             ctx = {}
             # remove leading/trailing backticks leftovers
             lines = [ln.rstrip() for ln in block.splitlines()]
-            current_key = None
             for ln in lines:
                 # strip YAML comments
                 raw = ln.split("#", 1)[0].rstrip()
@@ -142,7 +141,9 @@ def parse_phase_sections(plan_text: str) -> List[Phase]:
         phases.append(Phase(number=num, title=title, checklist=checklist, anchor=anchor))
     return phases
 
-def determine_current_phase(resume_ctx: Dict[str, str], override_phase: Optional[int]) -> Optional[int]:
+def determine_current_phase(
+    resume_ctx: Dict[str, str], override_phase: Optional[int]
+) -> Optional[int]:
     if override_phase is not None:
         return override_phase
     return resume_ctx.get("current_phase")
@@ -307,7 +308,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--phase", type=int, default=None, help="Override current phase")
     ap.add_argument("--max-tasks", type=int, default=3, help="Number of unchecked items to return")
     ap.add_argument("--json", action="store_true", help="Emit JSON instead of text")
-    ap.add_argument("--strict", action="store_true", help="Non-zero exit if required artifacts missing/invalid")
+    ap.add_argument(
+        "--strict",
+        action="store_true",
+        help="Non-zero exit if required artifacts missing/invalid",
+    )
     args = ap.parse_args(argv)
 
     plan_path = Path(args.plan)
@@ -327,7 +332,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         print("[WARN] resume_context not found in plan.", file=sys.stderr)
     current_phase = determine_current_phase(resume, args.phase)
     if current_phase is None:
-        print("[ERROR] Unable to determine current phase (resume_context missing, and no --phase).", file=sys.stderr)
+        print(
+            "[ERROR] Unable to determine current phase (resume_context missing, and no --phase).",
+            file=sys.stderr,
+        )
         return 3 if args.strict else 0
 
     phases = parse_phase_sections(plan_text)

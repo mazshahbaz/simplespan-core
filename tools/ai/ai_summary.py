@@ -5,12 +5,17 @@ Aggregates /ai-log/*.jsonl entries into monthly JSON/Markdown (and optional CSV)
 Usage:
   python tools/ai/ai_summary.py --month 2025-10 --out reports/ai --csv --strict
 """
-import argparse, os, json, csv, re, sys
+import argparse
+import csv
+import json
+import re
+import sys
+from collections import Counter, defaultdict
+from datetime import datetime
 from pathlib import Path
-from datetime import datetime, timezone
-from collections import defaultdict, Counter
 
 ADR_RE = re.compile(r"ADR-\d{3}")
+
 
 def month_from_ts(ts: str) -> str:
     try:
@@ -24,6 +29,7 @@ def month_from_ts(ts: str) -> str:
             return dt.strftime("%Y-%m")
         except Exception:
             return "unknown"
+
 
 def normalize_entry(raw: dict) -> dict:
     route = raw.get("route") or {}
@@ -40,7 +46,7 @@ def normalize_entry(raw: dict) -> dict:
     has_outputs = bool(outs)
     fallback_used = bool(raw.get("fallback", False))  # future-proof; router can set it later
     # decisions may include ADR references
-    adrs = []
+    adrs: list[str] = []
     for d in raw.get("decisions") or []:
         if isinstance(d, dict):
             for v in d.values():
@@ -64,6 +70,7 @@ def normalize_entry(raw: dict) -> dict:
         "adrs": sorted(set(adrs)),
     }
 
+
 def load_month_logs(log_dir: Path, month: str):
     records = []
     if not log_dir.exists():
@@ -86,8 +93,10 @@ def load_month_logs(log_dir: Path, month: str):
                 records.append(rec)
     return records
 
+
 def pct(n, d):
     return 0.0 if d == 0 else round(100.0 * n / d, 1)
+
 
 def summarize(records):
     N = len(records)
@@ -104,11 +113,12 @@ def summarize(records):
     for (t, s), items in sorted(routes.items()):
         m = len(items)
         by_route.append({
-            "type": t, "subtype": s,
+            "type": t,
+            "subtype": s,
             "sessions": m,
             "with_outputs_pct": pct(sum(1 for x in items if x["has_outputs"]), m),
             "reviewed_pct": pct(sum(1 for x in items if x["reviewed"]), m),
-            "avg_ctx": round(sum(x["context_len"] for x in items)/m, 1) if m else 0.0,
+            "avg_ctx": round(sum(x["context_len"] for x in items) / m, 1) if m else 0.0,
         })
 
     # by agent
@@ -122,7 +132,7 @@ def summarize(records):
             "agent": a,
             "sessions": m,
             "reviewed_pct": pct(sum(1 for x in items if x["reviewed"]), m),
-            "avg_outputs": round(sum(len(x["outputs"]) for x in items)/m, 2) if m else 0.0
+            "avg_outputs": round(sum(len(x["outputs"]) for x in items) / m, 2) if m else 0.0,
         })
 
     # by reviewer
@@ -131,19 +141,32 @@ def summarize(records):
         reviewers[r["reviewed_by"]].append(r)
     by_reviewer = []
     for rv, items in sorted(reviewers.items()):
-        if rv in (None, "", "TBD"): 
+        if rv in (None, "", "TBD"):
             continue
-        by_reviewer.append({
-            "reviewer": rv,
-            "sessions": len(items)
-        })
+        by_reviewer.append({"reviewer": rv, "sessions": len(items)})
 
     # risks
     risks = {
-        "no_outputs": [r["timestamp"] + " — " + (r["goal"] or "") for r in records if not r["has_outputs"]],
-        "no_reviewer": [r["timestamp"] + " — " + (r["goal"] or "") for r in records if not r["reviewed"]],
-        "fallback_routes": [r["timestamp"] + " — " + (r["goal"] or "") for r in records if r["fallback_used"]],
-        "large_context": [r["timestamp"] + f" — ctx={r['context_len']} — " + (r["goal"] or "") for r in records if r["context_len"] > 150],
+        "no_outputs": [
+            r["timestamp"] + " — " + (r["goal"] or "")
+            for r in records
+            if not r["has_outputs"]
+        ],
+        "no_reviewer": [
+            r["timestamp"] + " — " + (r["goal"] or "")
+            for r in records
+            if not r["reviewed"]
+        ],
+        "fallback_routes": [
+            r["timestamp"] + " — " + (r["goal"] or "")
+            for r in records
+            if r["fallback_used"]
+        ],
+        "large_context": [
+            r["timestamp"] + f" — ctx={r['context_len']} — " + (r["goal"] or "")
+            for r in records
+            if r["context_len"] > 150
+        ],
     }
 
     # files and adrs
@@ -167,29 +190,43 @@ def summarize(records):
     }
     return summary
 
+
 def write_json(out_dir: Path, month: str, data: dict):
     out_dir.mkdir(parents=True, exist_ok=True)
     p = out_dir / f"ai-summary-{month}.json"
-    data = {"month": month, "generated_at": datetime.utcnow().isoformat()+"Z", **data}
+    data = {"month": month, "generated_at": datetime.utcnow().isoformat() + "Z", **data}
     p.write_text(json.dumps(data, indent=2), encoding="utf-8")
     return p
+
 
 def write_md(out_dir: Path, month: str, data: dict):
     p = out_dir / f"ai-summary-{month}.md"
     c = [f"# AI Activity Summary — {month}", ""]
     counts = data["counts"]
+    sessions = counts["sessions"]
+    with_outputs_pct = 0 if sessions == 0 else round(100 * counts["with_outputs"] / sessions, 1)
+    reviewed_pct = 0 if sessions == 0 else round(100 * counts["reviewed"] / sessions, 1)
     c += [
         "## Overview",
-        f"- Sessions: {counts['sessions']}",
-        f"- With outputs: {counts['with_outputs']} ({(0 if counts['sessions']==0 else round(100*counts['with_outputs']/counts['sessions'],1))}%)",
-        f"- Reviewed: {counts['reviewed']} ({(0 if counts['sessions']==0 else round(100*counts['reviewed']/counts['sessions'],1))}%)",
+        f"- Sessions: {sessions}",
+        f"- With outputs: {counts['with_outputs']} ({with_outputs_pct}%)",
+        f"- Reviewed: {counts['reviewed']} ({reviewed_pct}%)",
         f"- Fallback estimate: {counts['fallback_est']}",
         f"- Avg context size: {counts['avg_ctx']} files",
-        ""]
+        "",
+    ]
     # By Route
-    c += ["## By Route", "| type | subtype | sessions | outputs % | reviewed % | avg ctx |", "|---|---|---:|---:|---:|---:|"]
+    c += [
+        "## By Route",
+        "| type | subtype | sessions | outputs % | reviewed % | avg ctx |",
+        "|---|---|---:|---:|---:|---:|",
+    ]
     for r in data["by_route"]:
-        c.append(f"| {r['type']} | {r['subtype']} | {r['sessions']} | {r['with_outputs_pct']} | {r['reviewed_pct']} | {r['avg_ctx']} |")
+        row = (
+            f"| {r['type']} | {r['subtype']} | {r['sessions']} | "
+            f"{r['with_outputs_pct']} | {r['reviewed_pct']} | {r['avg_ctx']} |"
+        )
+        c.append(row)
     c.append("")
 
     # Risks
@@ -227,15 +264,27 @@ def write_md(out_dir: Path, month: str, data: dict):
     p.write_text("\n".join(c), encoding="utf-8")
     return p
 
+
 def write_csv(out_dir: Path, month: str, records: list):
     p = out_dir / f"ai-summary-{month}.csv"
-    fields = ["timestamp","route_type","route_subtype","agent","reviewed_by","has_outputs","fallback_used","context_len","goal"]
+    fields = [
+        "timestamp",
+        "route_type",
+        "route_subtype",
+        "agent",
+        "reviewed_by",
+        "has_outputs",
+        "fallback_used",
+        "context_len",
+        "goal",
+    ]
     with p.open("w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
         for r in records:
             w.writerow({k: r.get(k) for k in fields})
     return p
+
 
 def main():
     ap = argparse.ArgumentParser(description="AI monthly summary generator")
@@ -244,7 +293,12 @@ def main():
     ap.add_argument("--out", default="reports/ai", help="Output directory for reports")
     ap.add_argument("--csv", action="store_true", help="Also write CSV export")
     ap.add_argument("--strict", action="store_true", help="Exit 1 if risk thresholds exceeded")
-    ap.add_argument("--threshold", type=float, default=20.0, help="Max % unreviewed allowed in strict mode (default 20%)")
+    ap.add_argument(
+        "--threshold",
+        type=float,
+        default=20.0,
+        help="Max % unreviewed allowed in strict mode (default 20%)",
+    )
     args = ap.parse_args()
 
     # Determine month
@@ -264,16 +318,24 @@ def main():
     md_p = write_md(out_dir, month, data)
     if args.csv:
         csv_p = write_csv(out_dir, month, records)
-        print(f"[ai_summary] Wrote {json_p} \n[ai_summary] Wrote {md_p} \n[ai_summary] Wrote {csv_p}")
+        print(
+            f"[ai_summary] Wrote {json_p} \n[ai_summary] Wrote {md_p} \n[ai_summary] Wrote {csv_p}"
+        )
     else:
         print(f"[ai_summary] Wrote {json_p} \n[ai_summary] Wrote {md_p}")
 
     # Strict mode: fail if unreviewed exceeds threshold
     unreviewed = data["counts"]["sessions"] - data["counts"]["reviewed"]
-    unrev_pct = 0.0 if data["counts"]["sessions"] == 0 else 100.0 * unreviewed / data["counts"]["sessions"]
+    sessions = data["counts"]["sessions"]
+    unrev_pct = 0.0 if sessions == 0 else 100.0 * unreviewed / sessions
     if args.strict and unrev_pct > args.threshold:
-        print(f"[ai_summary] STRICT FAIL: {unrev_pct:.1f}% unreviewed > {args.threshold:.1f}% threshold", file=sys.stderr)
+        msg = (
+            f"[ai_summary] STRICT FAIL: {unrev_pct:.1f}% unreviewed > "
+            f"{args.threshold:.1f}% threshold"
+        )
+        print(msg, file=sys.stderr)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

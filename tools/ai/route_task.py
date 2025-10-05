@@ -5,8 +5,14 @@
 #   python tools/ai/route_task.py --show-routes
 #   python tools/ai/route_task.py --check
 #   python tools/ai/route_task.py --type plan --subtype module --list-context
-import argparse, os, sys, json, datetime, traceback
+import argparse
+import datetime
+import json
+import os
+import sys
+import traceback
 from pathlib import Path
+
 
 def posixify(p: Path) -> str:
     try:
@@ -120,7 +126,7 @@ def load_yaml(path: Path):
 
 def validate_schema(data: dict, schema_path: Path):
     try:
-        from jsonschema import validate, Draft7Validator  # type: ignore
+        from jsonschema import Draft7Validator  # type: ignore
     except Exception:
         raise RuntimeError("jsonschema not installed. Install with: pip install jsonschema pyyaml")
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
@@ -259,17 +265,46 @@ def main():
     ap.add_argument("--type", dest="rtype", help="Task type (plan, module, fea, docs)")
     ap.add_argument("--subtype", default="module", help="Subtype (module, feature, _default)")
     ap.add_argument("--goal", help="Short description of the task objective")
-    ap.add_argument("--outfile", default=".ai/last_prompt.txt", help="Where to write the final prompt")
-    ap.add_argument("--dry-run", action="store_true", help="Print to STDOUT; do not write files or ai-log")
-    ap.add_argument("--show-routes", action="store_true", help="List available routes from YAML")
-    ap.add_argument("--list-context", action="store_true", help="Print resolved context files (no prompt)")
-    ap.add_argument("--check", action="store_true", help="Validate YAML + schema + prompt paths and exit")
-    ap.add_argument("--map", default=str(DEFAULT_MAP_PATH), help="Path to router-map.yaml")
-    ap.add_argument("--schema", default=str(DEFAULT_SCHEMA_PATH), help="Path to router-map.schema.json")
+    ap.add_argument(
+        "--outfile",
+        default=".ai/last_prompt.txt",
+        help="Where to write the final prompt",
+    )
+    ap.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print to STDOUT; do not write files or ai-log",
+    )
+    ap.add_argument(
+        "--show-routes",
+        dest="show_routes",
+        action="store_true",
+        help="List available routes from YAML",
+    )
+    ap.add_argument(
+        "--list-context",
+        dest="list_context",
+        action="store_true",
+        help="Print resolved context files (no prompt)",
+    )
+    ap.add_argument(
+        "--check",
+        action="store_true",
+        help="Validate YAML + schema + prompt paths and exit",
+    )
+    ap.add_argument(
+        "--map",
+        default=str(DEFAULT_MAP_PATH),
+        help="Path to router-map.yaml",
+    )
+    ap.add_argument(
+        "--schema",
+        default=str(DEFAULT_SCHEMA_PATH),
+        help="Path to router-map.schema.json",
+    )
     args = ap.parse_args()
 
     yaml_map = None
-    using_builtin = False
 
     # Load YAML map if present
     map_path = Path(args.map)
@@ -285,16 +320,14 @@ def main():
             yaml_err = str(e)
             print(f"[router] WARNING: {yaml_err}", file=sys.stderr)
             yaml_map = None
-            using_builtin = True
     else:
         if not map_path.exists():
             print(f"[router] WARNING: router map not found: {map_path}", file=sys.stderr)
         if not schema_path.exists():
             print(f"[router] WARNING: schema not found: {schema_path}", file=sys.stderr)
-        using_builtin = True
 
     # Show routes
-    if args.show-routes:
+    if args.show_routes:
         routes = yaml_map.get("routes", {}) if yaml_map else {}
         if not routes:
             print("(Using built-in map)")
@@ -323,16 +356,21 @@ def main():
     if not args.rtype:
         print("--type is required unless using --show-routes or --check", file=sys.stderr)
         sys.exit(2)
-    if not (args.goal or args.list-context):
-        print("--goal is required unless using --list-context/--show-routes/--check", file=sys.stderr)
+    if not (args.goal or args.list_context):
+        print(
+            "--goal is required unless using --list-context/--show-routes/--check",
+            file=sys.stderr,
+        )
         sys.exit(2)
 
     # Resolve route
-    route, defaults, warnings, fell_back = resolve_route(yaml_map or {"routes": {}}, args.rtype, args.subtype)
+    route, defaults, warnings, fell_back = resolve_route(
+        yaml_map or {"routes": {}}, args.rtype, args.subtype
+    )
 
     context_files = collect_context(route.get("context", []))
 
-    if args.list-context:
+    if args.list_context:
         for p in context_files:
             print(p)
         return

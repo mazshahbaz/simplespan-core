@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
 # Validate router-map.yaml against schema and check prompt/context existence.
-import argparse, json, sys, os
+import argparse
+import json
+import sys
 from pathlib import Path
+
 
 def main():
     ap = argparse.ArgumentParser(description="Validate router map and generate a report")
     ap.add_argument("--map", required=True, help="Path to tools/ai/router-map.yaml")
     ap.add_argument("--schema", required=True, help="Path to tools/ai/router-map.schema.json")
     ap.add_argument("--report", default="router-map-report.json", help="Where to write JSON report")
-    ap.add_argument("--strict-context", action="store_true", help="Fail if context files/dirs are missing (Phase B)")
+    ap.add_argument(
+        "--strict-context",
+        dest="strict_context",
+        action="store_true",
+        help="Fail if context files/dirs are missing (Phase B)",
+    )
     args = ap.parse_args()
 
     root = Path.cwd()
@@ -48,7 +56,7 @@ def main():
         return finish(args.report, errors, warnings, summary)
 
     # Token sanity
-    defaults = (data.get("defaults") or {})
+    (data.get("defaults") or {})
     routes = (data.get("routes") or {})
     summary["routes"] = sum(len(v or {}) for v in routes.values())
 
@@ -58,7 +66,9 @@ def main():
             # acceptance tokens
             for item in (body.get("acceptance") or []):
                 if isinstance(item, str) and item.startswith("@") and item not in allowed_tokens:
-                    errors.append(f"Unknown acceptance token in {t}/{s}: '{item}' (allowed: @common)")
+                    errors.append(
+                        f"Unknown acceptance token in {t}/{s}: '{item}' (allowed: @common)"
+                    )
 
             # prompt existence
             pr = root / (body.get("prompt") or "")
@@ -72,12 +82,13 @@ def main():
                 if not p.exists():
                     summary["missing_context"] += 1
                     msg = f"Missing context path for {t}/{s}: {ctx}"
-                    if args.strict-context:
+                    if args.strict_context:
                         errors.append(msg)
                     else:
                         warnings.append(msg)
 
     return finish(args.report, errors, warnings, summary)
+
 
 def finish(report_path, errors, warnings, summary):
     status = "ok"
@@ -95,9 +106,11 @@ def finish(report_path, errors, warnings, summary):
     Path(report_path).write_text(json.dumps(report, indent=2), encoding="utf-8")
 
     # Print a compact console summary
-    print(f"[router-map] status={status} routes={summary.get('routes')} "
-          f"missing_prompts={summary.get('missing_prompts')} "
-          f"missing_context={summary.get('missing_context')}")
+    print(
+        f"[router-map] status={status} routes={summary.get('routes')} "
+        f"missing_prompts={summary.get('missing_prompts')} "
+        f"missing_context={summary.get('missing_context')}"
+    )
 
     if errors:
         for e in errors:
@@ -107,6 +120,7 @@ def finish(report_path, errors, warnings, summary):
         for w in warnings:
             print(f"[router-map][WARN] {w}", file=sys.stderr)
         sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

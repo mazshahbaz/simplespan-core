@@ -3,9 +3,12 @@
 Usage:
   python tools/ai/ai_log_append.py --date YYYY-MM-DD --outputs path1 path2 ... --reviewed-by "Name"
 """
-import argparse, json, sys
-from pathlib import Path
+import argparse
+import json
+import sys
 from datetime import datetime
+from pathlib import Path
+
 
 def main():
     ap = argparse.ArgumentParser(description="Append outputs/reviewer to ai-log entry")
@@ -67,10 +70,8 @@ def main():
     with log_path.open("w", encoding="utf-8") as f:
         if lines[:-1]:
             for ln in lines[:-1]:
-                f.write(ln.strip() + "
-")
-        f.write(json.dumps(entry) + "
-")
+                f.write(ln.strip() + "\n")
+        f.write(json.dumps(entry) + "\n")
 
     print(f"[ai_log_append] Updated {log_path}")
 
